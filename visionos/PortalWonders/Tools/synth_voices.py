@@ -182,7 +182,108 @@ def mermaid_hum():
     y *= env(tt, 0.15, 0.6)
     return finish(reverb(y, 2.4, taps=8, rng=rng, wet=0.55), 0.5)
 
-for name, fn in [("narwhal_clicks", narwhal_clicks), ("narwhal_whistle", narwhal_whistle), ("narwhal_knocks", narwhal_knocks),
+# ------------------------------------------------------------------ mermaid: siren song
+A4, B4, C5, D5, E5, F5, G5, A5 = 440.0, 493.88, 523.25, 587.33, 659.25, 698.46, 783.99, 880.0
+E4, F4, G4, D4, C4 = 329.63, 349.23, 392.0, 293.66, 261.63
+
+def melody_curve(notes, tt, glide=0.09):
+    """notes: [(freq or None for rest, seconds)] -> (f0 curve, loudness gate) with portamento."""
+    pts, gate = [], []
+    t0 = 0.0; last = None
+    for f, d in notes:
+        if f is None:
+            gate += [(t0, 0.0), (t0 + d, 0.0)]; t0 += d; continue
+        if last is None: pts.append((t0, f))
+        else:            pts += [(t0, last), (t0 + glide, f)]
+        pts.append((t0 + d, f))
+        gate += [(t0, 0.0), (t0 + 0.08, 1.0), (t0 + d - 0.05, 1.0), (t0 + d, 0.85)]
+        last = f; t0 += d
+    pts.append((t0 + 1, last or A4))
+    f0 = curve(pts, tt)
+    g = curve(sorted(gate), tt)
+    return f0, g
+
+def sung_voice(notes, tt, rng, vibrato=0.007, brightness=1.0, breath=0.08):
+    """A sung line: harmonic voice, vowel morphing between 'ah' and 'oo', vibrato, breath."""
+    f0, gate = melody_curve(notes, tt)
+    f0 = f0 * (1 + vibrato * np.sin(2 * np.pi * 5.3 * tt + rng.uniform(0, 6)) * curve([(0, 0.3), (0.5, 1)], tt))
+    raw = voiced(f0, tt, harmonics=16, rolloff=1.0, jitter=0.0015, rng=rng)
+    ah = formants(raw, [700, 1150, 2600, 3300], [220, 260, 420, 500], [1.0, 0.8, 0.35 * brightness, 0.2 * brightness])
+    oo = formants(raw, [320, 760, 2300, 3100], [160, 220, 400, 500], [1.0, 0.55, 0.2 * brightness, 0.1 * brightness])
+    morph = 0.5 + 0.5 * np.sin(2 * np.pi * 0.17 * tt + rng.uniform(0, 6))
+    y = ah * morph + oo * (1 - morph)
+    y += bandpass(rng.standard_normal(len(tt)), 1500, 6000) * breath * gate
+    return y * gate
+
+def chorus(x, rng, depth=0.004):
+    """Two slightly detuned copies for shimmer (cheap resample via interpolation)."""
+    n = len(x); idx = np.arange(n)
+    y = x.copy()
+    for d in (1 + depth, 1 - depth):
+        src = np.clip(idx * d, 0, n - 1)
+        y += np.interp(src, idx, x) * 0.5
+    return y / (np.abs(y).max() + 1e-9)
+
+def underwater(x):
+    """Roll off the top so it sits in the trench, not on the surface."""
+    return bandpass(x, 60, 4200, order=1.2)
+
+def siren_piece(melody, harmony, rng, dur, octave_whisper=True):
+    tt = seconds(dur)
+    lead = sung_voice(melody, tt, rng)
+    harm = sung_voice(harmony, tt, rng, vibrato=0.005, brightness=0.7, breath=0.05) * 0.45
+    y = lead + harm
+    if octave_whisper:
+        up = [(f * 2 if f else None, d) for f, d in melody]
+        y += sung_voice(up, tt, rng, vibrato=0.004, brightness=0.4, breath=0.02) * 0.12
+    y = chorus(y, rng)
+    y *= env(tt, 0.4, 1.2)
+    return finish(reverb(underwater(y), decay_s=3.5, taps=10, rng=rng, wet=0.6), 0.55)
+
+def mermaid_siren_a():
+    """Slow descending lament that turns and climbs back — the classic lure."""
+    rng = np.random.default_rng(21)
+    melody  = [(E5, 1.0), (D5, 0.7), (C5, 1.0), (A4, 1.4), (None, 0.3), (C5, 0.6), (D5, 0.6), (E5, 1.8)]
+    harmony = [(C5, 1.0), (B4, 0.7), (A4, 1.0), (F4, 1.4), (None, 0.3), (A4, 0.6), (B4, 0.6), (C5, 1.8)]
+    return siren_piece(melody, harmony, rng, 8.2)
+
+def mermaid_siren_b():
+    """Rising arc to a held high note, then settling home."""
+    rng = np.random.default_rng(22)
+    melody  = [(A4, 0.7), (C5, 0.7), (E5, 1.0), (G5, 0.5), (E5, 1.4), (None, 0.25), (D5, 0.5), (C5, 0.5), (A4, 1.8)]
+    harmony = [(D4, 0.7), (F4, 0.7), (A4, 1.0), (C5, 0.5), (A4, 1.4), (None, 0.25), (G4, 0.5), (F4, 0.5), (D4, 1.8)]
+    return siren_piece(melody, harmony, rng, 8.0)
+
+def mermaid_lure():
+    """One long glissando: rises out of the dark, hangs, and sinks away."""
+    rng = np.random.default_rng(24)
+    tt = seconds(6.0)
+    f0 = curve([(0, A4 * 0.9), (2.4, E5), (3.9, E5), (5.2, A4), (6.0, G4)], tt)
+    f0 *= 1 + 0.008 * np.sin(2 * np.pi * 5.1 * tt) * curve([(0, 0), (2.0, 1), (6, 1)], tt)
+    raw = voiced(f0, tt, harmonics=16, rolloff=1.0, jitter=0.002, rng=rng)
+    y = formants(raw, [420, 900, 2400, 3200], [180, 240, 420, 500], [1.0, 0.6, 0.25, 0.12])
+    y += bandpass(rng.standard_normal(len(tt)), 1200, 5000) * 0.1 * curve([(0, 0.2), (3, 1), (6, 0.4)], tt)
+    y = chorus(y, rng, depth=0.006)
+    y *= env(tt, 0.9, 1.6) * curve([(0, 0.4), (2.4, 1.0), (3.9, 0.9), (6, 0.2)], tt)
+    return finish(reverb(underwater(y), decay_s=4.0, taps=10, rng=rng, wet=0.65), 0.5)
+
+def mermaid_call():
+    """Short 'oo-ee' call: quick rise, hold, fall. Her hello."""
+    rng = np.random.default_rng(25)
+    tt = seconds(1.8)
+    f0 = curve([(0, G4), (0.3, E5), (0.9, E5), (1.3, C5), (1.8, C5)], tt)
+    f0 *= 1 + 0.006 * np.sin(2 * np.pi * 5.6 * tt)
+    raw = voiced(f0, tt, harmonics=14, rolloff=1.0, jitter=0.002, rng=rng)
+    morph = curve([(0, 0), (0.3, 0), (0.9, 1), (1.8, 1)], tt)       # oo -> ee
+    oo = formants(raw, [320, 760, 2300], [160, 220, 400], [1.0, 0.55, 0.2])
+    ee = formants(raw, [300, 2300, 3000], [140, 300, 400], [1.0, 0.7, 0.35])
+    y = oo * (1 - morph) + ee * morph
+    y *= env(tt, 0.08, 0.5)
+    return finish(reverb(underwater(y), decay_s=3.0, taps=8, rng=rng, wet=0.55), 0.5)
+
+for name, fn in [("mermaid_siren_a", mermaid_siren_a), ("mermaid_siren_b", mermaid_siren_b),
+                 ("mermaid_lure", mermaid_lure), ("mermaid_call", mermaid_call),
+                 ("narwhal_clicks", narwhal_clicks), ("narwhal_whistle", narwhal_whistle), ("narwhal_knocks", narwhal_knocks),
                  ("unicorn_whinny", unicorn_whinny), ("unicorn_nicker", unicorn_nicker), ("unicorn_snort", unicorn_snort),
                  ("puppy_yip", puppy_yip), ("puppy_bark", puppy_bark), ("puppy_whine", puppy_whine),
                  ("mermaid_hum", mermaid_hum)]:

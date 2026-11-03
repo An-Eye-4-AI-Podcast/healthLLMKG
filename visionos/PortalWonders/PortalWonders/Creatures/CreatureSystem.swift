@@ -234,7 +234,7 @@ final class CreatureSystem: System {
         switch occasion {
         case .arrive: pool = voice.arrive; gain = 0
         case .react:  pool = voice.react;  gain = 2
-        case .idle:   pool = voice.idle;   gain = -8       // distant, inside the world
+        case .idle:   pool = voice.idle;   gain = voice.idleGain   // distant, inside the world
         }
         guard let clip = pool.randomElement() else { return }
         let controller = entity.playAudio(clip)
@@ -246,7 +246,7 @@ final class CreatureSystem: System {
     /// Idle creatures call out now and then so the world sounds inhabited.
     private func idleChatter(_ entity: Entity, _ c: inout CreatureComponent) {
         guard var voice = entity.components[VoiceComponent.self], c.time >= voice.nextIdleCallAt else { return }
-        voice.nextIdleCallAt = c.time + Double.random(in: 9...22)
+        voice.nextIdleCallAt = c.time + Double.random(in: voice.idleEvery)
         entity.components.set(voice)
         speak(entity, &c, .idle)
     }

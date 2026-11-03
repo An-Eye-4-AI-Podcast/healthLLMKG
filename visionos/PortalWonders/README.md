@@ -82,8 +82,12 @@ summons idle creatures and keeps visiting ones from leaving.
 Creatures also talk. Each carries a `VoiceComponent` of bundled one-shot clips played as
 spatial audio from its own body: a narwhal whistle on arrival and an echolocation buzz when
 tapped; a nicker on arrival and a full whinny when tapped for the unicorn; a double bark on
-arrival and yips on tap for the puppy; a sung vocalise for the mermaid. Idle creatures call
-out every 9–22 s from deep in the world, quieter, so the scene sounds inhabited.
+arrival and yips on tap for the puppy. The mermaid sings: two siren phrases (a descending
+lament that turns and climbs, and a rising arc to a held high note), a long glissando lure, a
+short "oo-ee" call at the glass, and a hum, all with a harmony voice, chorus shimmer and a
+long underwater reverb. Idle creatures call out from deep in the world, quieter, so the scene
+sounds inhabited; the mermaid sings every 7–16 s so her song overlaps the narwhal's whistles
+and knocks.
 
 ### You are in the scene
 `UserTracker` runs ARKit world tracking (head pose) and hand tracking (index fingertips) and
