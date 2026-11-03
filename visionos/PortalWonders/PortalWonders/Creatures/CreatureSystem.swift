@@ -172,6 +172,15 @@ final class CreatureSystem: System {
             let nod: Float = handIsNear ? sin(t * 2.2) * 0.12 : sin(t * 0.7) * 0.04
             head.orientation = simd_quatf(angle: nod, axis: [1, 0, 0])
         }
+        // Legs trot (diagonal pairs in phase) while travelling, settle when parked.
+        let travelling = c.phase == .approaching || c.phase == .retreating
+        let gaitRate: Float = c.spec.locomotion == .bound ? 11 : 6
+        let gaitAmp: Float = travelling ? (c.spec.locomotion == .bound ? 0.6 : 0.4) : 0.03
+        for (name, phase) in [("legFL", Float(0)), ("legBR", 0), ("legFR", .pi), ("legBL", .pi)] {
+            if let leg = entity.findEntity(named: name) {
+                leg.orientation = simd_quatf(angle: sin(t * gaitRate + phase) * gaitAmp, axis: [1, 0, 0])
+            }
+        }
     }
 
     private func setReactionFX(_ entity: Entity, enabled: Bool) {

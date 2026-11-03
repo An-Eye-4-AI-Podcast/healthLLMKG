@@ -2,7 +2,7 @@
 
 Drop files here with these exact basenames. Everything except the panoramas is optional: with
 no video the app projects the still panorama onto a 360° dome (and lights the creatures from
-it); with no model it uses primitive stand-in creatures; with no audio it stays quiet. The
+it); with no model it uses lofted procedural stand-in creatures (smooth bodies, legs that trot, tails that wag); with no audio it stays quiet. The
 in-world HUD lists whatever it could not find.
 
 Asset resolution order per world: video → panorama still → flat backdrop colour.

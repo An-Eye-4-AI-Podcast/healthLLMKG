@@ -84,7 +84,8 @@ summons idle creatures and keeps visiting ones from leaving.
 - Portal size/position, creature home/visit spots, timing: `Environments/WonderEnvironment.swift`
 - Motion flavour, reaction choreography, blend distance: `Creatures/CreatureSystem.swift`
 - Particle looks: `Effects/Atmosphere.swift`
-- Stand-in geometry: `Creatures/PlaceholderCreatures.swift`
+- Stand-in creatures: `Creatures/PlaceholderCreatures.swift` (bodies are lofted along spine
+  curves by `Creatures/LoftMesh.swift`; edit the station tables to reshape them)
 
 ## Known limits
 - Mono video only inside the portal (see `Resources/ASSETS.md`).
