@@ -18,9 +18,10 @@ make open            # xcodegen generate && open PortalWonders.xcodeproj
 ```
 
 Requirements: Xcode 16+, visionOS 2.0 SDK. Runs in the simulator (no hand tracking there) and
-on Apple Vision Pro. Drop media into `PortalWonders/Resources/` per `Resources/ASSETS.md`;
-without it you get stand-in creatures and a tinted backdrop, which is enough to see the portal
-and the lighting hand-off working.
+on Apple Vision Pro. Three AI-generated 2:1 panoramas ship in `Resources/Panoramas/`, so each
+portal shows real scenery out of the box: a bioluminescent trench floor, a flower valley at
+golden hour, a sunlit couch. Drop video and USDZ models into `PortalWonders/Resources/` per
+`Resources/ASSETS.md` to upgrade from stills and stand-in creatures.
 
 ## How it replicates the Encounter Dinosaurs setup
 
@@ -33,6 +34,7 @@ ImmersiveSpace (.mixed)
     └── world   (WorldComponent + ImageBasedLightComponent ← video frame)
         ├── backdrop  (unlit sphere, fills behind 180° footage)
         ├── videoDome (inside-out sphere/hemisphere + VideoMaterial)
+        │             or panoramaDome (full sphere + UnlitMaterial still)
         ├── atmosphere (ParticleEmitterComponent: bubbles / petals / dust)
         └── creature  (PortalCrossingComponent, CreatureComponent,
                        ImageBasedLightComponent .blend(video, neutral, t),
@@ -59,7 +61,8 @@ This is the effect you described, and it comes from two mechanisms layered toget
    the world's light and the *front* wears yours, per pixel, at the plane.
 2. **Video-derived IBL inside the world.** `VideoLightingRig` grabs a frame with
    `AVAssetImageGenerator`, pads 180° frames to a 2:1 canvas, and turns it into an
-   `EnvironmentResource(equirectangular:)`. That becomes the `ImageBasedLightComponent` on the
+   `EnvironmentResource(equirectangular:)`. With a still panorama instead of video, the
+   same probe is built from the still. That becomes the `ImageBasedLightComponent` on the
    world, so reflections on the narwhal are literally the trench footage. It re-samples every
    20 s (`AppModel.lightingRefreshSeconds`) so lighting drifts with the video.
 3. **Soft hand-off.** Each creature also carries its own light whose source is

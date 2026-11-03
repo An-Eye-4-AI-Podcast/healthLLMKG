@@ -43,6 +43,12 @@ enum VideoLightingRig {
         return try await EnvironmentResource(equirectangular: equirect, withName: name)
     }
 
+    /// Builds the probe straight from a 2:1 equirectangular still (the no-video path).
+    static func environmentResource(fromEquirectangular image: CGImage,
+                                    name: String) async throws -> EnvironmentResource {
+        try await EnvironmentResource(equirectangular: image, withName: name)
+    }
+
     /// A soft studio probe: warm bright ceiling, grey horizon, dark floor. Used as the
     /// "other side" of the blend so protruding geometry stops looking like it is still underwater.
     static func neutralEnvironmentResource(name: String = "neutral-room") async throws -> EnvironmentResource {

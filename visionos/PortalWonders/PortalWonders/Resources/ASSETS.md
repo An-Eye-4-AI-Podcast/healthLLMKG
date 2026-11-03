@@ -1,11 +1,17 @@
 # Asset manifest
 
-Drop files here with these exact basenames. Everything is optional: the app boots with a
-solid-colour backdrop, primitive stand-in creatures, and no audio, and the in-world HUD lists
-whatever it could not find.
+Drop files here with these exact basenames. Everything except the panoramas is optional: with
+no video the app projects the still panorama onto a 360° dome (and lights the creatures from
+it); with no model it uses primitive stand-in creatures; with no audio it stays quiet. The
+in-world HUD lists whatever it could not find.
+
+Asset resolution order per world: video → panorama still → flat backdrop colour.
 
 | Slot | File | Notes |
 |------|------|-------|
+| Trench panorama | `Panoramas/trench_pano.jpg` | **Included.** 2:1 equirectangular still, used when the video is absent |
+| Valley panorama | `Panoramas/valley_pano.jpg` | **Included.** Same |
+| Den panorama | `Panoramas/den_pano.jpg` | **Included.** Same |
 | Trench video | `Videos/trench_360.mp4` | Full 360° mono equirectangular (2:1). HEVC, ≤ 4096×2048 |
 | Valley video | `Videos/valley_180.mp4` | VR180 **mono** half-equirectangular (1:1 per hemisphere, i.e. 2048×2048) |
 | Den video | `Videos/den_180.mp4` | Same as valley |

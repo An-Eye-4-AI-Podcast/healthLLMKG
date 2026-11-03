@@ -1,5 +1,6 @@
 import RealityKit
 import AVFoundation
+import UIKit
 import simd
 
 /// Assembles one portal world: the clipped `WorldComponent` sub-scene, the video dome and its
@@ -18,6 +19,8 @@ final class PortalScene {
 
     private var videoLight: EnvironmentResource?
     private var neutralLight: EnvironmentResource?
+    /// The still panorama in use when no video was found (also feeds the lighting).
+    private var panoramaImage: CGImage?
 
     /// Assets that were not found in the bundle; stand-ins were used instead.
     private(set) var missingAssets: [String] = []
@@ -59,6 +62,7 @@ final class PortalScene {
 
         guard let url = videoURL() else {
             missingAssets.append("Videos/\(config.videoName).mp4")
+            await buildPanorama()
             return
         }
         let playback = VideoPlayback(url: url)
@@ -72,12 +76,33 @@ final class PortalScene {
         }
     }
 
+    /// No video: project the still panorama onto a full sphere instead.
+    private func buildPanorama() async {
+        guard let image = UIImage(named: config.panoramaName)?.cgImage else {
+            missingAssets.append("Panoramas/\(config.panoramaName).jpg")
+            return
+        }
+        panoramaImage = image
+        guard let texture = try? await TextureResource(image: image,
+                                                       withName: config.panoramaName,
+                                                       options: .init(semantic: .color)),
+              let dome = try? ImmersiveVideoDome.makeStillEntity(texture: texture) else {
+            missingAssets.append("panorama texture")
+            return
+        }
+        dome.position = eyePosition
+        world.addChild(dome)
+    }
+
     private func buildLighting() async {
         neutralLight = try? await VideoLightingRig.neutralEnvironmentResource()
         if let url = playback?.url {
             videoLight = try? await VideoLightingRig.environmentResource(from: url,
                                                                         projection: config.projection,
                                                                         name: "\(environment.rawValue)-video-ibl")
+        } else if let panoramaImage {
+            videoLight = try? await VideoLightingRig.environmentResource(fromEquirectangular: panoramaImage,
+                                                                        name: "\(environment.rawValue)-pano-ibl")
         }
         // Everything in the world is lit by the footage; fall back to the neutral probe.
         if let light = videoLight ?? neutralLight {

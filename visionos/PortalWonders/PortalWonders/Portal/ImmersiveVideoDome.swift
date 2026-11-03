@@ -88,6 +88,16 @@ enum ImmersiveVideoDome {
         return dome
     }
 
+    /// Dome wearing a still equirectangular image instead of video. Always a full 360° sphere.
+    static func makeStillEntity(texture: TextureResource, radius: Float = 40) throws -> ModelEntity {
+        let mesh = try makeMesh(projection: .equirectangular360, radius: radius)
+        var material = UnlitMaterial()
+        material.color = .init(tint: .white, texture: .init(texture))
+        let dome = ModelEntity(mesh: mesh, materials: [material])
+        dome.name = "panoramaDome"
+        return dome
+    }
+
     /// Solid colour sphere slightly larger than the dome. Fills the back hemisphere behind a 180°
     /// video so the portal never shows raw passthrough where the footage ends.
     static func makeBackdrop(color: UIColor, radius: Float = 45) throws -> ModelEntity {

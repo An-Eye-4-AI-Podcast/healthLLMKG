@@ -50,6 +50,8 @@ struct CreatureSpec: Identifiable {
 struct EnvironmentConfig {
     var videoName: String
     var projection: VideoProjection
+    /// 2:1 equirectangular still (jpg/png in Resources/Panoramas) shown when the video is absent.
+    var panoramaName: String
     var ambientAudioName: String?
     /// Exponent applied to the video-derived image-based light (2^x). 0 = as-is.
     var lightingIntensityExponent: Float = 0
@@ -115,6 +117,7 @@ enum WonderEnvironment: String, CaseIterable, Identifiable, Codable {
             return EnvironmentConfig(
                 videoName: "trench_360",
                 projection: .equirectangular360,
+                panoramaName: "trench_pano",
                 ambientAudioName: "trench_ambience",
                 lightingIntensityExponent: 0.5,
                 backdropColor: UIColor(red: 0.01, green: 0.05, blue: 0.14, alpha: 1),
@@ -151,6 +154,7 @@ enum WonderEnvironment: String, CaseIterable, Identifiable, Codable {
             return EnvironmentConfig(
                 videoName: "valley_180",
                 projection: .equirectangular180,
+                panoramaName: "valley_pano",
                 ambientAudioName: "valley_ambience",
                 lightingIntensityExponent: 0.8,
                 backdropColor: UIColor(red: 0.78, green: 0.80, blue: 0.92, alpha: 1),
@@ -175,6 +179,7 @@ enum WonderEnvironment: String, CaseIterable, Identifiable, Codable {
             return EnvironmentConfig(
                 videoName: "den_180",
                 projection: .equirectangular180,
+                panoramaName: "den_pano",
                 ambientAudioName: "den_ambience",
                 lightingIntensityExponent: 0.3,
                 backdropColor: UIColor(red: 0.95, green: 0.90, blue: 0.82, alpha: 1),
