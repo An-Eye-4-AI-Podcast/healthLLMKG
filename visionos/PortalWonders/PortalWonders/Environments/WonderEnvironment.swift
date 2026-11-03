@@ -44,6 +44,8 @@ struct CreatureSpec: Identifiable {
     var reactionAnimationName: String? = nil
     /// Whether the creature ever crosses the portal plane (mermaids stay inside, narwhals don't).
     var crossesPortal = true
+    /// Vocalisation clips; nil uses the defaults for the placeholder kind (see VoiceSet).
+    var voices: VoiceSet? = nil
 }
 
 /// Static configuration for one portal world.

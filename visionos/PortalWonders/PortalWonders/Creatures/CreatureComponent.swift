@@ -24,4 +24,6 @@ struct CreatureComponent: Component {
     var summonRequested = false
 
     var hasReactionClip = false
+    /// Set by the phase machine on the frame a new phase begins; consumed by the voice logic.
+    var enteredPhase = false
 }

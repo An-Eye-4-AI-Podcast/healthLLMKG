@@ -19,6 +19,7 @@ Asset resolution order per world: video → panorama still → flat backdrop col
 | Mermaid | `Models/mermaid.usdz` | Faces +Z, origin at tail tip (y = 0). Clips: `idle`, `wave` |
 | Unicorn | `Models/unicorn.usdz` | Faces +Z, origin between hooves (y = 0). Clips: `walk`, `rear` |
 | Puppy | `Models/puppy.usdz` | Faces +Z, origin at paws (y = 0). Clips: `sit`, `jump` |
+| Voices | `Audio/narwhal_{clicks,whistle,knocks}.m4a`, `unicorn_{whinny,nicker,snort}.m4a`, `puppy_{yip,bark,whine}.m4a`, `mermaid_hum.m4a` | **Included.** One-shot calls synthesised by `Tools/synth_voices.py`. Which clip plays when is set in `VoiceSet` (`Creatures/VoiceComponent.swift`); override per creature with `CreatureSpec.voices` |
 | Ambience | `Audio/{trench,valley,den}_ambience.m4a` | **Included.** 40 s seamless loops synthesised by `Tools/synth_ambience.py`; replace with recorded beds any time. `.mp3`/`.wav` also accepted |
 
 `.mov`/`.m4v` work for video too. The video's own soundtrack plays as well, so mute the file

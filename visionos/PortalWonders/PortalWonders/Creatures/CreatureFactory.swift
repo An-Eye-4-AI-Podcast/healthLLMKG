@@ -71,7 +71,13 @@ enum CreatureFactory {
         fx.isEnabled = false
         root.addChild(fx)
 
-        // 7. Behaviour state.
+        // 7. Voice: clips play from the creature's own body, so they pan and attenuate with it.
+        if let voice = await VoiceComponent.load(spec.voices ?? .default(for: spec.placeholder), startingAt: 0) {
+            root.components.set(SpatialAudioComponent(gain: -4, directivity: .beam(focus: 0.4)))
+            root.components.set(voice)
+        }
+
+        // 8. Behaviour state.
         root.components.set(CreatureComponent(
             spec: spec,
             phaseDuration: spec.idleSeconds * Double.random(in: 0.3...1.0),

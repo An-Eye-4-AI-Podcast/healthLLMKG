@@ -16,6 +16,7 @@ struct PortalWondersApp: App {
         // ECS registration must happen before any RealityView is created.
         CreatureComponent.registerComponent()
         LightBlendComponent.registerComponent()
+        VoiceComponent.registerComponent()
         CreatureSystem.registerSystem()
     }
 
