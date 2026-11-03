@@ -2,7 +2,7 @@
 
 Drop files here with these exact basenames. Everything except the panoramas is optional: with
 no video the app projects the still panorama onto a 360° dome (and lights the creatures from
-it); with no model it uses lofted procedural stand-in creatures (smooth bodies, legs that trot, tails that wag); with no audio it stays quiet. The
+it); with no model it uses lofted procedural stand-in creatures (smooth bodies, legs that trot, tails that wag); the ambience beds are bundled, so each world has sound from the first launch. The
 in-world HUD lists whatever it could not find.
 
 Asset resolution order per world: video → panorama still → flat backdrop colour.
@@ -19,7 +19,7 @@ Asset resolution order per world: video → panorama still → flat backdrop col
 | Mermaid | `Models/mermaid.usdz` | Faces +Z, origin at tail tip (y = 0). Clips: `idle`, `wave` |
 | Unicorn | `Models/unicorn.usdz` | Faces +Z, origin between hooves (y = 0). Clips: `walk`, `rear` |
 | Puppy | `Models/puppy.usdz` | Faces +Z, origin at paws (y = 0). Clips: `sit`, `jump` |
-| Ambience | `Audio/{trench,valley,den}_ambience.m4a` | Loops. `.mp3`/`.wav` also accepted |
+| Ambience | `Audio/{trench,valley,den}_ambience.m4a` | **Included.** 40 s seamless loops synthesised by `Tools/synth_ambience.py`; replace with recorded beds any time. `.mp3`/`.wav` also accepted |
 
 `.mov`/`.m4v` work for video too. The video's own soundtrack plays as well, so mute the file
 if you rely on the ambience bed.
