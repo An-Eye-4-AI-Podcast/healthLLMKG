@@ -1,0 +1,93 @@
+# Portal Wonders (visionOS)
+
+An Encounter-Dinosaurs-style app: a portal cut into your room, a 180°/360° video world behind it,
+and 3D creatures that swim, trot, or bound *through* the portal plane into your space.
+
+| World | Footage | Creatures | What they do |
+|-------|---------|-----------|--------------|
+| **Mariana Trench** | 360° | Narwhal, mermaid | Narwhal breaches through the portal tusk-first and barrel-rolls when tapped. The mermaid comes to the glass and waves but never leaves the water. |
+| **Unicorn Valley** | 180° | Unicorn | Grazes among the flowers, walks up and pokes head + horn into the room, rears with sparkles on tap. |
+| **Puppy Den** | 180° | Puppy | Sits on the couch in the video, bounds over the sill when you reach toward the portal, follows your hand, hops on tap. |
+
+## Build
+
+```bash
+brew install xcodegen
+cd visionos/PortalWonders
+make open            # xcodegen generate && open PortalWonders.xcodeproj
+```
+
+Requirements: Xcode 16+, visionOS 2.0 SDK. Runs in the simulator (no hand tracking there) and
+on Apple Vision Pro. Drop media into `PortalWonders/Resources/` per `Resources/ASSETS.md`;
+without it you get stand-in creatures and a tinted backdrop, which is enough to see the portal
+and the lighting hand-off working.
+
+## How it replicates the Encounter Dinosaurs setup
+
+```
+ImmersiveSpace (.mixed)
+└── root
+    ├── portal  (plane + PortalMaterial + PortalComponent → world)
+    │           clippingMode .plane(+Z)  crossingMode .plane(+Z)
+    ├── ambience (SpatialAudioComponent)
+    └── world   (WorldComponent + ImageBasedLightComponent ← video frame)
+        ├── backdrop  (unlit sphere, fills behind 180° footage)
+        ├── videoDome (inside-out sphere/hemisphere + VideoMaterial)
+        ├── atmosphere (ParticleEmitterComponent: bubbles / petals / dust)
+        └── creature  (PortalCrossingComponent, CreatureComponent,
+                       ImageBasedLightComponent .blend(video, neutral, t),
+                       ImageBasedLightReceiverComponent on every mesh)
+```
+
+### Portal, not a doorway
+`PortalComponent` renders everything under `world` only through the plane; `clippingMode`
+slices the world at the portal surface. The user never enters the world. Entities tagged with
+`PortalCrossingComponent` are the exception: `crossingMode` lets them render on the room side
+of the plane, which is what lets the narwhal's tusk hang in your living room.
+
+### The 180/360 video
+`ImmersiveVideoDome` builds an inward-facing equirectangular mesh (full sphere for 360°,
+front hemisphere for 180°) centred at eye height and wraps it in a `VideoMaterial` driven by
+a looping `AVQueuePlayer`. It is unlit on purpose: the footage *is* the light source.
+
+### The two-sided lighting
+This is the effect you described, and it comes from two mechanisms layered together:
+
+1. **Renderer split at the plane.** The clipped portion of a crossing creature is drawn as part
+   of the portal world; the protruding portion is drawn in the main pass in your room, where
+   visionOS applies its real-world environment lighting. So the *back* of the creature wears
+   the world's light and the *front* wears yours, per pixel, at the plane.
+2. **Video-derived IBL inside the world.** `VideoLightingRig` grabs a frame with
+   `AVAssetImageGenerator`, pads 180° frames to a 2:1 canvas, and turns it into an
+   `EnvironmentResource(equirectangular:)`. That becomes the `ImageBasedLightComponent` on the
+   world, so reflections on the narwhal are literally the trench footage. It re-samples every
+   20 s (`AppModel.lightingRefreshSeconds`) so lighting drifts with the video.
+3. **Soft hand-off.** Each creature also carries its own light whose source is
+   `.blend(videoIBL, neutralRoomIBL, t)`. `CreatureSystem` drives `t` from how far the nose has
+   pushed past the plane, so the seam reads as one object, not a sticker.
+
+### Behaviour (ECS)
+`CreatureSystem` runs a four-phase loop per creature: idle (wander at home) → approaching
+(swoop / footfalls / hops toward `visitPosition`) → visiting (bob, face the user, track the
+nearest hand) → retreating. Taps trigger a reaction clip if the USDZ has one, otherwise a
+procedural barrel-roll / rear / hop with a sparkle burst. A hand within ~1 m of the portal
+summons idle creatures and keeps visiting ones from leaving.
+
+### Hand tracking
+`HandTracker` runs an ARKit `HandTrackingProvider` and publishes index-fingertip positions via
+`InteractionState`. Requires the `NSHandsTrackingUsageDescription` key, already in `project.yml`.
+
+## Where to tune things
+- Portal size/position, creature home/visit spots, timing: `Environments/WonderEnvironment.swift`
+- Motion flavour, reaction choreography, blend distance: `Creatures/CreatureSystem.swift`
+- Particle looks: `Effects/Atmosphere.swift`
+- Stand-in geometry: `Creatures/PlaceholderCreatures.swift`
+
+## Known limits
+- Mono video only inside the portal (see `Resources/ASSETS.md`).
+- `EnvironmentResource(equirectangular:withName:)` and `PortalCrossingComponent` are
+  visionOS 2 APIs; the deployment target is pinned accordingly.
+- Hand tracking is unavailable in the simulator; tapping the portal itself summons creatures.
+- This code was authored without a macOS/Xcode toolchain in the loop, so expect to fix a few
+  compiler nits on first build. The structure and API usage follow Apple's RealityKit
+  portal/crossing documentation.

@@ -1,0 +1,38 @@
+# XcodeGen spec — `brew install xcodegen && make open` from this folder.
+name: PortalWonders
+options:
+  bundleIdPrefix: com.aneye4ai
+  deploymentTarget:
+    visionOS: "2.0"
+  createIntermediateGroups: true
+settings:
+  base:
+    # Language mode 5 keeps strict-concurrency warnings from blocking the first build.
+    SWIFT_VERSION: "5.0"
+    TARGETED_DEVICE_FAMILY: "7"
+    SUPPORTED_PLATFORMS: "xros xrsimulator"
+    ENABLE_PREVIEWS: YES
+targets:
+  PortalWonders:
+    type: application
+    platform: visionOS
+    sources:
+      - path: PortalWonders
+        excludes:
+          - "**/*.md"
+          - "**/.gitkeep"
+    info:
+      path: PortalWonders/Info.plist
+      properties:
+        CFBundleDisplayName: Portal Wonders
+        UIApplicationSceneManifest:
+          UIApplicationSupportsMultipleScenes: true
+          UIApplicationPreferredDefaultSceneSessionRole: UIWindowSceneSessionRoleApplication
+        UILaunchScreen: {}
+        NSHandsTrackingUsageDescription: Creatures turn to look at your hand when you reach toward the portal.
+        NSWorldSensingUsageDescription: Used to keep the portal anchored in your room.
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.aneye4ai.PortalWonders
+        CODE_SIGN_STYLE: Automatic
+        GENERATE_INFOPLIST_FILE: NO
