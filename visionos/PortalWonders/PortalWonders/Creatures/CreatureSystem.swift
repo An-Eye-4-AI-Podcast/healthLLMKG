@@ -6,6 +6,12 @@ import Foundation
 /// hand, plays reactions, and drives the video/neutral lighting blend as it protrudes.
 final class CreatureSystem: System {
     private static let query = EntityQuery(where: .has(CreatureComponent.self))
+    private static let rippleQuery = EntityQuery(where: .has(PortalRippleComponent.self))
+
+    /// Closest a creature's nose may come to the wearer's face, in metres.
+    private let personalSpace: Float = 0.55
+    /// A fingertip this close to the snout counts as a touch.
+    private let touchRadius: Float = 0.22
 
     required init(scene: RealityKit.Scene) {}
 
@@ -13,6 +19,8 @@ final class CreatureSystem: System {
         let dt = Float(context.deltaTime)
         guard dt > 0 else { return }
         let hands = InteractionState.shared.handPositions()
+        let head = InteractionState.shared.headPose()
+        let ripple = Array(context.entities(matching: Self.rippleQuery, updatingSystemWhen: .rendering)).first
 
         for entity in context.entities(matching: Self.query, updatingSystemWhen: .rendering) {
             guard var c = entity.components[CreatureComponent.self] else { continue }
@@ -32,7 +40,9 @@ final class CreatureSystem: System {
             let progress = Float(min(c.phaseElapsed / max(c.phaseDuration, 0.001), 1))
             let eased = smoothstep(progress)
             let home = c.spec.homePosition
-            let visit = c.spec.visitPosition
+            // The visit spot slides sideways with the wearer so the creature comes to *you*.
+            var visit = c.spec.visitPosition
+            visit.x += clamp(head.position.x, -0.8, 0.8) * 0.5
             var position: SIMD3<Float>
             switch c.phase {
             case .idle:        position = home + wander(c.spec.locomotion, t)
@@ -51,11 +61,10 @@ final class CreatureSystem: System {
                 let dir = home - visit
                 desiredYaw = atan2(dir.x, dir.z)
             case .visiting:
-                desiredYaw = 0
-                if let hand = nearestHand, handIsNear {
-                    let dir = hand - position
-                    desiredYaw = clamp(atan2(dir.x, dir.z), -1.0, 1.0)
-                }
+                // Face the wearer's head; a nearby hand steals the attention.
+                let focus = (handIsNear ? nearestHand : nil) ?? head.position
+                let dir = focus - position
+                desiredYaw = clamp(atan2(dir.x, dir.z), -1.0, 1.0)
             case .idle:
                 switch c.spec.locomotion {
                 case .swim:  desiredYaw = .pi / 2 + sin(t * 0.3) * 0.8
@@ -101,6 +110,19 @@ final class CreatureSystem: System {
                 }
             }
 
+            // --- personal space ---------------------------------------------------------
+            // Never push the nose closer than `personalSpace` to the wearer's face.
+            let maxZ = head.position.z - personalSpace - c.noseOffset
+            if position.z > maxZ { position.z = maxZ }
+
+            // --- touch --------------------------------------------------------------------
+            let orientation = simd_quatf(angle: c.currentYaw, axis: [0, 1, 0])
+            let snout = position + orientation.act(c.touchLocal)
+            if c.reactionElapsed == nil,
+               hands.contains(where: { simd_distance($0, snout) < touchRadius }) {
+                c.reactionRequested = true          // a boop on the nose
+            }
+
             // --- apply ----------------------------------------------------------------
             entity.position = position
             entity.orientation = simd_quatf(angle: c.currentYaw, axis: [0, 1, 0])
@@ -109,6 +131,8 @@ final class CreatureSystem: System {
 
             animateSecondaryParts(entity, c, t: t, handIsNear: handIsNear)
             updateLightingBlend(entity, position: position, c, dt: dt)
+            updateTrail(entity, c)
+            updateCrossing(entity, &c, position: position, ripple: ripple)
 
             entity.components[CreatureComponent.self] = c
         }
@@ -225,6 +249,33 @@ final class CreatureSystem: System {
         voice.nextIdleCallAt = c.time + Double.random(in: 9...22)
         entity.components.set(voice)
         speak(entity, &c, .idle)
+    }
+
+    // MARK: Effects
+
+    /// Bubble trails only run while the creature is actually swimming somewhere.
+    private func updateTrail(_ entity: Entity, _ c: CreatureComponent) {
+        guard let trail = entity.findEntity(named: "trail"),
+              let tag = trail.components[TrailComponent.self], tag.onlyWhileMoving,
+              var emitter = trail.components[ParticleEmitterComponent.self] else { return }
+        let shouldEmit = c.phase == .approaching || c.phase == .retreating
+        if emitter.isEmitting != shouldEmit {
+            emitter.isEmitting = shouldEmit
+            trail.components.set(emitter)
+        }
+    }
+
+    /// Fires the portal ripple at the point where the nose breaks the plane.
+    private func updateCrossing(_ entity: Entity, _ c: inout CreatureComponent,
+                                position: SIMD3<Float>, ripple: Entity?) {
+        let outside = (position.z + c.noseOffset) > c.portalPlaneZ
+        defer { c.wasOutside = outside }
+        guard outside != c.wasOutside, c.spec.crossesPortal, let ripple else { return }
+        ripple.setPosition([position.x, position.y + c.touchLocal.y, c.portalPlaneZ + 0.02], relativeTo: nil)
+        if var emitter = ripple.components[ParticleEmitterComponent.self] {
+            emitter.burst()
+            ripple.components.set(emitter)
+        }
     }
 
     // MARK: Lighting hand-off

@@ -7,7 +7,7 @@ struct PortalImmersiveView: View {
     @Environment(\.dismissImmersiveSpace) private var dismissImmersiveSpace
 
     @State private var scene: PortalScene?
-    @State private var handTracker = HandTracker()
+    @State private var tracker = UserTracker()
     @State private var missingAssets: [String] = []
 
     private let hudAttachmentID = "hud"
@@ -20,7 +20,9 @@ struct PortalImmersiveView: View {
 
             if let hud = attachments.entity(for: hudAttachmentID) {
                 let cfg = scene.config
-                hud.position = cfg.portalPosition + [0, -cfg.portalSize.y / 2 - 0.16, 0.05]
+                // Beside the portal, at the viewer's eye line, angled slightly inward.
+                hud.position = cfg.portalPosition + [cfg.portalSize.x / 2 + 0.42, 0.15, 0.1]
+                hud.orientation = simd_quatf(angle: -0.25, axis: [0, 1, 0])
                 scene.root.addChild(hud)
             }
             self.scene = scene
@@ -29,7 +31,7 @@ struct PortalImmersiveView: View {
             Attachment(id: hudAttachmentID) {
                 PortalHUD(environment: appModel.selectedEnvironment,
                           missingAssets: missingAssets,
-                          handTrackingError: handTracker.lastError,
+                          handTrackingError: tracker.lastError,
                           onSummon: { scene?.summonAll() },
                           onClose: { Task { await dismissImmersiveSpace() } })
             }
@@ -40,7 +42,7 @@ struct PortalImmersiveView: View {
                 .onEnded { value in scene?.handleTap(on: value.entity) }
         )
         .task {
-            if appModel.handTrackingEnabled { await handTracker.start() }
+            await tracker.start(trackHands: appModel.handTrackingEnabled)
         }
         .task {
             // Follow the footage: re-sample the IBL every N seconds.
@@ -54,7 +56,7 @@ struct PortalImmersiveView: View {
         .onDisappear {
             scene?.tearDown()
             scene = nil
-            handTracker.stop()
+            tracker.stop()
             appModel.immersiveState = .closed
         }
     }

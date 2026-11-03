@@ -105,9 +105,9 @@ enum WonderEnvironment: String, CaseIterable, Identifiable, Codable {
 
     var hint: String {
         switch self {
-        case .trench: return "Tap the narwhal, or hold your hand out — it will come look."
-        case .valley: return "Tap the unicorn to make it rear. Sparkles included."
-        case .den:    return "Reach toward the portal. The puppy can't resist a hand."
+        case .trench: return "Hold your hand out. The narwhal swims through to nudge it."
+        case .valley: return "Reach toward the horn. Touch it for sparkles."
+        case .den:    return "Reach toward the portal, then look down. The puppy comes to your feet."
         }
     }
 
@@ -123,8 +123,8 @@ enum WonderEnvironment: String, CaseIterable, Identifiable, Codable {
                 ambientAudioName: "trench_ambience",
                 lightingIntensityExponent: 0.5,
                 backdropColor: UIColor(red: 0.01, green: 0.05, blue: 0.14, alpha: 1),
-                portalSize: [1.7, 2.1],
-                portalPosition: [0, 1.3, -2.0],
+                portalSize: [1.8, 2.2],
+                portalPosition: [0, 1.3, -2.6],
                 atmosphere: .bubbles,
                 creatures: [
                     CreatureSpec(
@@ -132,8 +132,8 @@ enum WonderEnvironment: String, CaseIterable, Identifiable, Codable {
                         modelName: "narwhal",
                         placeholder: .narwhal,
                         scale: 1.0,
-                        homePosition: [0.8, 1.5, -4.2],
-                        visitPosition: [0.0, 1.35, -1.25],   // tusk reaches ~0.75 m into the room
+                        homePosition: [0.8, 1.5, -4.8],
+                        visitPosition: [0.0, 1.35, -2.15],   // head and half the body in the room, tusk tip ~0.6 m from your face
                         locomotion: .swim,
                         idleSeconds: 6, approachSeconds: 6, visitSeconds: 8, retreatSeconds: 5,
                         idleAnimationName: "swim", reactionAnimationName: "spin"
@@ -143,8 +143,8 @@ enum WonderEnvironment: String, CaseIterable, Identifiable, Codable {
                         modelName: "mermaid",
                         placeholder: .mermaid,
                         scale: 1.0,
-                        homePosition: [-0.9, 0.9, -3.4],
-                        visitPosition: [-0.6, 1.0, -2.3],   // comes to the glass, never through it
+                        homePosition: [-0.9, 0.9, -4.0],
+                        visitPosition: [-0.6, 1.0, -2.9],   // comes to the glass, never through it
                         locomotion: .swim,
                         idleSeconds: 10, approachSeconds: 5, visitSeconds: 6, retreatSeconds: 4,
                         idleAnimationName: "idle", reactionAnimationName: "wave",
@@ -160,8 +160,8 @@ enum WonderEnvironment: String, CaseIterable, Identifiable, Codable {
                 ambientAudioName: "valley_ambience",
                 lightingIntensityExponent: 0.8,
                 backdropColor: UIColor(red: 0.78, green: 0.80, blue: 0.92, alpha: 1),
-                portalSize: [2.0, 2.2],
-                portalPosition: [0, 1.25, -2.2],
+                portalSize: [2.2, 2.3],
+                portalPosition: [0, 1.15, -2.2],   // bottom edge on the floor so hooves cross inside the frame
                 atmosphere: .petals,
                 creatures: [
                     CreatureSpec(
@@ -170,7 +170,7 @@ enum WonderEnvironment: String, CaseIterable, Identifiable, Codable {
                         placeholder: .unicorn,
                         scale: 1.0,
                         homePosition: [0.6, 0.0, -5.0],
-                        visitPosition: [0.0, 0.0, -1.6],    // head and horn through the portal
+                        visitPosition: [0.0, 0.0, -1.75],   // head, horn and forelegs through the portal
                         locomotion: .graze,
                         idleSeconds: 7, approachSeconds: 7, visitSeconds: 9, retreatSeconds: 6,
                         idleAnimationName: "walk", reactionAnimationName: "rear"
@@ -185,8 +185,8 @@ enum WonderEnvironment: String, CaseIterable, Identifiable, Codable {
                 ambientAudioName: "den_ambience",
                 lightingIntensityExponent: 0.3,
                 backdropColor: UIColor(red: 0.95, green: 0.90, blue: 0.82, alpha: 1),
-                portalSize: [1.5, 1.3],
-                portalPosition: [0, 1.0, -1.8],
+                portalSize: [1.6, 1.56],
+                portalPosition: [0, 0.78, -1.8],   // floor-to-shoulder window: the pup jumps down through it
                 atmosphere: .dustMotes,
                 creatures: [
                     CreatureSpec(
@@ -195,7 +195,7 @@ enum WonderEnvironment: String, CaseIterable, Identifiable, Codable {
                         placeholder: .puppy,
                         scale: 1.0,
                         homePosition: [0.2, 0.55, -3.0],    // on the couch cushion in the video
-                        visitPosition: [0.0, 0.62, -1.2],   // front paws over the sill
+                        visitPosition: [0.2, 0.0, -1.0],    // bounds off the couch and lands at your feet
                         locomotion: .bound,
                         idleSeconds: 4, approachSeconds: 3, visitSeconds: 10, retreatSeconds: 3,
                         idleAnimationName: "sit", reactionAnimationName: "jump"

@@ -17,6 +17,8 @@ struct PortalWondersApp: App {
         CreatureComponent.registerComponent()
         LightBlendComponent.registerComponent()
         VoiceComponent.registerComponent()
+        PortalRippleComponent.registerComponent()
+        TrailComponent.registerComponent()
         CreatureSystem.registerSystem()
     }
 

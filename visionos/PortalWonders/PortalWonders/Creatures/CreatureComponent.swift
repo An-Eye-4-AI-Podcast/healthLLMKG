@@ -17,6 +17,10 @@ struct CreatureComponent: Component {
     var portalCenter: SIMD3<Float>
     /// Distance from the root to the tip of the nose along +Z (after scaling).
     var noseOffset: Float
+    /// Snout point in creature-local space; a fingertip within reach of it counts as a touch.
+    var touchLocal: SIMD3<Float>
+    /// Whether the nose was on the room side of the plane last frame (for the crossing ripple).
+    var wasOutside = false
 
     var currentYaw: Float = 0
     var reactionRequested = false

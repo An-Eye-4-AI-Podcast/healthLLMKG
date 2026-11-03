@@ -139,9 +139,17 @@ final class PortalScene {
     }
 
     private func buildAtmosphere() {
+        // Inside the world: clipped by the portal.
         world.addChild(Atmosphere.makeEmitter(style: config.atmosphere,
                                               portalPosition: config.portalPosition,
                                               portalSize: config.portalSize))
+        // In the room: spills out of the plane, and a ripple that fires when creatures cross.
+        root.addChild(Atmosphere.makeSpill(style: config.atmosphere,
+                                           portalPosition: config.portalPosition,
+                                           portalSize: config.portalSize))
+        let ripple = Atmosphere.makeRipple(style: config.atmosphere)
+        ripple.position = config.portalPosition + [0, 0, 0.02]
+        root.addChild(ripple)
     }
 
     private func buildAmbience() async {

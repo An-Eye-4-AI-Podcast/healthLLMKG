@@ -85,9 +85,41 @@ tapped; a nicker on arrival and a full whinny when tapped for the unicorn; a dou
 arrival and yips on tap for the puppy; a sung vocalise for the mermaid. Idle creatures call
 out every 9–22 s from deep in the world, quieter, so the scene sounds inhabited.
 
-### Hand tracking
-`HandTracker` runs an ARKit `HandTrackingProvider` and publishes index-fingertip positions via
-`InteractionState`. Requires the `NSHandsTrackingUsageDescription` key, already in `project.yml`.
+### You are in the scene
+`UserTracker` runs ARKit world tracking (head pose) and hand tracking (index fingertips) and
+publishes both through `InteractionState`. The creatures use them in five ways:
+
+- **They come to you.** The visit spot slides sideways with your head, so step left and the
+  narwhal arrives on your left.
+- **They look at you.** While visiting, a creature turns toward your head; a nearby hand steals
+  its attention.
+- **They keep their distance.** A creature's nose never comes closer than 0.55 m to your face,
+  whatever the configured visit position says.
+- **You can touch them.** A fingertip within 22 cm of the snout triggers the reaction: the
+  narwhal barrel-rolls and blows bubbles, the unicorn rears in sparkles, the puppy hops.
+- **You can summon them.** A hand within about a metre of the portal calls idle creatures over
+  and keeps visiting ones from leaving.
+
+Tapping (pinch while looking) does the same as a touch, and a tap on the portal itself summons
+everyone. Requires the `NSHandsTrackingUsageDescription` and `NSWorldSensingUsageDescription`
+keys, already in `project.yml`. In the simulator there is no tracking, so taps are the input.
+
+### Popping out
+Every portal's bottom edge sits on the floor where a creature's feet need to cross, so legs and
+paws emerge inside the frame rather than out of the wall. The narwhal's head and half its body
+come through with the tusk tip stopping ~0.6 m from your face; the unicorn brings its head,
+horn and forelegs into the room; the puppy jumps down out of the window and lands at your feet.
+
+### Effects
+- **Weather** inside each world: bubbles, petals, dust motes (clipped by the portal).
+- **Spill** in the room: bubbles float up and out of the trench, sparkle motes drift out of the
+  valley, sunlit dust out of the den. These live in the main scene so nothing clips them.
+- **Ripple**: a ring burst on the plane at the point where a nose breaks through, in either
+  direction.
+- **Trails** riding on the creatures: bubbles from the narwhal's blowhole while it swims, a
+  sparkle trail off the unicorn's horn, shimmer along the mermaid's tail.
+- **Reactions**: bubbles for the water creatures, gold-to-violet sparkles for the unicorn,
+  pink-to-gold for the puppy.
 
 ## Where to tune things
 - Portal size/position, creature home/visit spots, timing: `Environments/WonderEnvironment.swift`
@@ -100,7 +132,7 @@ out every 9–22 s from deep in the world, quieter, so the scene sounds inhabite
 - Mono video only inside the portal (see `Resources/ASSETS.md`).
 - `EnvironmentResource(equirectangular:withName:)` and `PortalCrossingComponent` are
   visionOS 2 APIs; the deployment target is pinned accordingly.
-- Hand tracking is unavailable in the simulator; tapping the portal itself summons creatures.
+- Head and hand tracking are unavailable in the simulator; taps are the only input there.
 - This code was authored without a macOS/Xcode toolchain in the loop, so expect to fix a few
   compiler nits on first build. The structure and API usage follow Apple's RealityKit
   portal/crossing documentation.

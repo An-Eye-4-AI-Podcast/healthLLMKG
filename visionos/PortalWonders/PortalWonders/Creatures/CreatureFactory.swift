@@ -65,11 +65,15 @@ enum CreatureFactory {
             hasReaction = true
         }
 
-        // 6. Reaction sparkle burst, off until tapped.
-        let fx = Atmosphere.makeReactionSparkles()
+        // 6. Effects: a reaction burst (off until tapped or touched) and, for most creatures,
+        //    a continuous trail (bubbles, horn sparkle, scale shimmer).
+        let fx = Atmosphere.makeReactionFX(for: spec.placeholder)
         fx.position = [0, bounds.center.y, bounds.max.z * 0.6]
         fx.isEnabled = false
         root.addChild(fx)
+        if let trail = Atmosphere.makeTrail(for: spec.placeholder, bounds: bounds) {
+            root.addChild(trail)
+        }
 
         // 7. Voice: clips play from the creature's own body, so they pan and attenuate with it.
         if let voice = await VoiceComponent.load(spec.voices ?? .default(for: spec.placeholder), startingAt: 0) {
@@ -84,6 +88,7 @@ enum CreatureFactory {
             portalPlaneZ: config.portalPosition.z,
             portalCenter: config.portalPosition,
             noseOffset: max(bounds.max.z, 0.05),
+            touchLocal: [0, bounds.center.y + bounds.extents.y * 0.2, bounds.max.z * 0.9],
             hasReactionClip: hasReaction
         ))
         return Result(entity: root, missing: missing)
